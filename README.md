@@ -109,6 +109,6 @@ npm start
 
 ### 👤 Author
 
-**Created by Chilongo Kondwani** *Developed for the [Insert Hackathon Name] Challenge.*
+**Created by Chilongo Kondwani** *Developed for the ERNIE AI Developer Challenge.*
 
 ---
