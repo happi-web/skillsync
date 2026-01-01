@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+python-multipart
+requests
+python-dotenv
+paddleocr>=2.7.0
+erniebot
+opencv-python-headless

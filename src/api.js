@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // ⚠️ PASTE YOUR NEW NGROK URL HERE (From Colab Step 4 output)
-const API_URL = "https://overblindly-autophytic-donetta.ngrok-free.dev";
+const API_URL = "http://localhost:8000"; // <--- UPDATE THIS URL
 
 // Configure Axios with the "Magic Header" to bypass Ngrok warning
 const apiClient = axios.create({

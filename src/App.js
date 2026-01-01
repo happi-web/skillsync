@@ -1,90 +1,164 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import SimulationInterface from './components/SimulationInterface';
-import { uploadPDF } from './api';
+import { HardDrive, UploadCloud, CheckCircle, Database, XCircle } from 'lucide-react';
 import './App.css';
 
 function App() {
   const [phase, setPhase] = useState('upload'); // upload | training | ready | simulation
   const [loading, setLoading] = useState(false);
-  const [fileId, setFileId] = useState(null);
+  const [fileName, setFileName] = useState("");
+  const [uploadError, setUploadError] = useState(""); // Track upload errors
+  
+  // Fake Terminal Logs for "Training" phase
+  const [bootLogs, setBootLogs] = useState([]);
 
   const handleFileUpload = async (e) => {
-    setLoading(true);
     const file = e.target.files[0];
     if (!file) return;
 
-    try {
-      const res = await uploadPDF(file);
-      setFileId(res.file_id);
+    setLoading(true);
+    setFileName(file.name);
+    setUploadError(""); // Reset previous errors
 
-      setPhase('training');
-      setTimeout(() => setPhase('ready'), 3500);
+    try {
+        // --- REAL UPLOAD LOGIC START ---
+        const formData = new FormData();
+        formData.append("file", file);
+
+        // Send to Backend
+        const response = await fetch("http://localhost:8000/upload", {
+            method: "POST",
+            body: formData,
+        });
+
+        if (!response.ok) {
+            throw new Error(`Server Error: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log("Upload Success:", data);
+
+        // If upload is good, start the cool boot sequence
+        setLoading(false);
+        setPhase('training');
+        runBootSequence();
+        // --- REAL UPLOAD LOGIC END ---
+
     } catch (err) {
-      console.error(err);
-      alert('Upload failed. Is the backend running?');
-      setPhase('upload');
+        console.error("Upload failed:", err);
+        setLoading(false);
+        setUploadError("CONNECTION FAILED: Check Backend Terminal");
     }
-    setLoading(false);
+  };
+
+  const runBootSequence = () => {
+      const logs = [
+          "Initializing Neural Link...",
+          `Reading: ${fileName}...`,
+          "Extracting Semantic Layers...",
+          "Optimizing Vector Embeddings...",
+          "Connecting to ERNIE-3.5 Mainframe...",
+          "Generating Simulation Context...",
+          "COMPLETE."
+      ];
+      
+      let i = 0;
+      const interval = setInterval(() => {
+          if (i < logs.length) {
+              setBootLogs(prev => [...prev, logs[i]]);
+              i++;
+          } else {
+              clearInterval(interval);
+              setTimeout(() => setPhase('ready'), 800);
+          }
+      }, 600);
   };
 
   return (
     <div className="app-container">
-      <header className="app-header">
-        <h1 className="app-title">🏆 SkillSync</h1>
-        <p className="app-subtitle">AI-Powered Training Simulator</p>
-      </header>
+      {/* BACKGROUND GRID */}
+      <div className="grid-bg"></div>
+
+      {/* HEADER */}
+      {phase !== 'simulation' && (
+        <header className="app-header">
+            <div className="logo-box">
+                <Database color="#00d0ff" size={32} />
+                <h1>SKILLSYNC <span className="version">OS v4.0</span></h1>
+            </div>
+            <p className="status-line">SYSTEM ONLINE // WAITING FOR INPUT</p>
+        </header>
+      )}
 
       <main className="app-main">
 
-        {/* UPLOAD */}
+        {/* 1. UPLOAD CARD */}
         {phase === 'upload' && (
-          <div className="card">
-            <h2>Step 1: Upload Manual</h2>
-            <p className="muted">
-              Upload a PDF (Safety Protocol, HR Policy, Technical Guide)
-            </p>
+          <div className="cyber-card">
+            <div className="card-header">
+                <UploadCloud size={40} color="#00d0ff"/>
+                <h2>DATA UPLINK</h2>
+            </div>
+            <p className="instruction">Upload Protocol Manual (PDF/IMG) to initialize training simulation.</p>
 
-            <label className="upload-btn">
-              {loading ? 'Processing...' : 'Select PDF File'}
+            {/* Error Message if Upload Fails */}
+            {uploadError && (
+                <div style={{color: '#ff003c', marginBottom: '10px', display:'flex', alignItems:'center', gap:'8px'}}>
+                    <XCircle size={16}/> {uploadError}
+                </div>
+            )}
+
+            <label className={`upload-zone ${loading ? 'scanning' : ''}`}>
+              {loading ? "UPLOADING TO MAINFRAME..." : "SELECT FILE"}
               <input type="file" onChange={handleFileUpload} disabled={loading} />
             </label>
-
-            {loading && (
-              <p className="loading-text">Scanning document structure...</p>
-            )}
-          </div>
-        )}
-
-        {/* TRAINING */}
-        {phase === 'training' && (
-          <div className="card card-training">
-            <h2 className="pulse">⚙️ Building Simulation...</h2>
-            <p className="muted">
-              Injecting domain knowledge into the neural network...
-            </p>
-
-            <div className="progress-bar">
-              <div className="progress-fill" />
+            
+            <div className="tech-decor">
+                <span>SECURE CONNECTION</span>
+                <span>BAIDU CLOUD</span>
             </div>
           </div>
         )}
 
-        {/* READY */}
-        {phase === 'ready' && (
-          <div className="card card-ready">
-            <div className="checkmark">✓</div>
-            <h2>System Ready</h2>
-            <p className="muted">
-              The AI has ingested <strong>{fileId}</strong> and generated a training scenario.
-            </p>
+        {/* 2. TRAINING (BOOT SEQUENCE) */}
+        {phase === 'training' && (
+          <div className="cyber-card wide">
+             <div className="terminal-window">
+                 <div className="terminal-header">
+                     <span className="dot red"></span>
+                     <span className="dot yellow"></span>
+                     <span className="dot green"></span>
+                     <span className="title">root@skillsync:~/training</span>
+                 </div>
+                 <div className="terminal-body">
+                     {bootLogs.map((log, i) => (
+                         <div key={i} className="log-line">
+                             <span className="prompt">$</span> {log}
+                         </div>
+                     ))}
+                     <div className="cursor-block"></div>
+                 </div>
+             </div>
+          </div>
+        )}
 
-            <button className="start-btn" onClick={() => setPhase('simulation')}>
-              Enter Simulation
+        {/* 3. READY STATE */}
+        {phase === 'ready' && (
+          <div className="cyber-card">
+            <div className="success-ring">
+                <CheckCircle size={60} color="#00ff41" />
+            </div>
+            <h2>SIMULATION GENERATED</h2>
+            <p>The AI has absorbed the material. You are now entering the scenario.</p>
+            
+            <button className="start-cyber-btn" onClick={() => setPhase('simulation')}>
+               <HardDrive size={18} style={{marginRight:8}}/> 
+               INITIATE SEQUENCE
             </button>
           </div>
         )}
 
-        {/* SIMULATION */}
+        {/* 4. SIMULATION */}
         {phase === 'simulation' && <SimulationInterface />}
       </main>
     </div>
